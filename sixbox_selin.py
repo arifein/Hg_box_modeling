@@ -55,15 +55,15 @@ def sixboxmercury(state,t):
     deepocean = state[5]
     deposition = state[6]
     geogenic = 90
-    katmland = 1.2
+    katmland = 0.5
     katmocean = 1.1
     koceanatm = 1.7
     ksoilatm = 0.04
-    ksoilsink = 0.01
-    ksinking = 2
+    ksoilsink = 0.028
+    ksinking = 3.5
     kupwelling = 0.053
     krivers = 0.074
-    kdeepsinking = 0.005
+    kdeepsinking = 0.0061
     kdeeptoint = 0.00079
     kburial = 0.001
     # geogenic = 200
@@ -91,11 +91,11 @@ def sixboxmercury(state,t):
 #Pull out a yearly timestep beginning in 2000 BC and ending in 2008 (can be changed to enable longer scenarios)
 t=np.arange(-4000,2009,1)
 #initial conditions (state0) are based on the pre-anthropogenic in the Amos box model
-state0=[115,1438,52000,95,5903,20576,266]
+state0=[225,1127,80000,161,9979,34783,357]
 
 #use ode solver to integrate the six box model
 constant=integrate.odeint(sixboxmercury, state0,t)
-#%%
+
 # Make plot of atmospheric burden
 plt.plot(t, constant[:,0])
 print(constant[-1,:])
