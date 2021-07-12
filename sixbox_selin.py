@@ -97,6 +97,6 @@ state0=[115,1438,52000,95,5903,20576,266]
 constant=integrate.odeint(sixboxmercury, state0,t)
 #%%
 # Make plot of atmospheric burden
-plt.plot(t, constant[:,1])
+plt.plot(t, constant[:,0])
 print(constant[-1,:])
 
