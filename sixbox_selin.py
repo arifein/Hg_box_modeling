@@ -40,6 +40,15 @@ def getemissions_t(time):
             x = 0
         return x
 
+#function that defines the rate coeff of biomass burning.
+def getbb(time):
+        if time < 1450:
+                x = 0
+        else:
+            #alter biomass burning rate after 1450 CE
+                x = 0.03
+        return x
+
 #This creates a six box model with the same timescales as Selin (2014).
 #Specified constant emissions at 1900 Mg
 #All units of k's are in #y-1
@@ -48,56 +57,71 @@ def getemissions_t(time):
 def sixboxmercury(state,t):
     emis = getemissions_t(t)
     atmosphere = state[0]
-    organicsoil = state[1]
-    mineralsoil = state[2]
-    surfaceocean = state[3]
-    interocean = state[4]
-    deepocean = state[5]
-    deposition = state[6]
+    fastsoil = state[1]
+    slowsoil = state[2]
+    armouredsoil = state[3]
+    surfaceocean = state[4]
+    interocean = state[5]
+    deepocean = state[6]
+    deposition = state[7]
     geogenic = 90
     katmland = 0.5
+    f_dep_f = 0.685 # fraction of atmospheric deposition to fast
+    f_dep_s = 0.3 # fraction of atmospheric deposition to slow
+    f_dep_a = 1 - f_dep_f - f_dep_s  # fraction of atmospheric deposition to armoured
+    
     katmocean = 1.1
     koceanatm = 1.7
-    ksoilatm = 0.04
-    ksoilsink = 0.028
+    k_bb = getbb(t)
+    ksoilfatm = 0.0136 + k_bb # fast soil to atmosphere
+    ksoilsatm = 7.2e-4 # slow soil to atmosphere
+    ksoilaatm = 1.3e-5 # armoured soil to atmosphere  
+    ksoilfs = 0.033 # fast to slow exchange
+    ksoilfa = 9.4e-4 # fast to armoured exchange    
+    ksoilsf = 0.0059 # slow to fast exchange   
+    ksoilsa = 1.4e-5 # slow to armoured exchange   
+    ksoilaf = 7.7e-5 # armoured to fast exchange
+    kriverf = 0.074  
+    krivers = 5.3e-4
+    krivera = 5.3e-5 
     ksinking = 3.5
     kupwelling = 0.053
-    krivers = 0.074
     kdeepsinking = 0.0061
     kdeeptoint = 0.00079
     kburial = 0.001
-    # geogenic = 200
-    # katmland = 0.44
-    # katmocean = 0.73
-    # koceanatm = 0.68
-    # ksoilatm = 0.01
-    # ksoilsink = 0.003
-    # ksinking = 1.12
-    # kupwelling = 0.019
-    # krivers = 0.0019
-    # kdeepsinking = 0.0033
-    # kdeeptoint = 0.0006
-    # kburial = 0.001
-    atmd = geogenic + emis - katmland * atmosphere - katmocean * atmosphere + koceanatm * surfaceocean + ksoilatm * organicsoil
-    orgsoild = (katmland * atmosphere) - ksoilatm * organicsoil - krivers * organicsoil - ksoilsink * organicsoil
-    minsoild = ksoilsink * organicsoil
-    surfocd = (katmocean * atmosphere) + krivers * organicsoil + kupwelling * interocean - koceanatm * surfaceocean - ksinking * surfaceocean
-    interocd = ksinking * surfaceocean - kdeepsinking * interocean + kdeeptoint * deepocean - kupwelling * interocean
-    deepocd = kdeepsinking * interocean - kdeeptoint * deepocean - kburial * deepocean
+    atmd = geogenic + emis - katmland * atmosphere - katmocean * atmosphere \
+        + koceanatm * surfaceocean + ksoilfatm * fastsoil + \
+        ksoilsatm * slowsoil + ksoilaatm * armouredsoil 
+    fastsoild = f_dep_f * (katmland * atmosphere) - ksoilfatm * fastsoil - \
+        kriverf * fastsoil - ksoilfs * fastsoil - ksoilfa * fastsoil + \
+        ksoilsf * slowsoil + ksoilaf * armouredsoil
+    slowsoild = f_dep_s * (katmland * atmosphere) + ksoilfs * fastsoil - \
+        ksoilsatm * slowsoil - ksoilsf * slowsoil - ksoilsa * slowsoil - \
+        - krivers * slowsoil
+    armsoild = f_dep_a * (katmland * atmosphere) + ksoilfa * fastsoil - \
+        ksoilaatm * armouredsoil + ksoilsa * slowsoil - \
+        ksoilaf * armouredsoil - krivera * armouredsoil
+    surfocd = (katmocean * atmosphere) + kriverf * fastsoil + \
+        krivers * slowsoil + krivera * armouredsoil + \
+        kupwelling * interocean - koceanatm * surfaceocean - ksinking * surfaceocean
+    interocd = ksinking * surfaceocean - kdeepsinking * interocean + \
+        kdeeptoint * deepocean - kupwelling * interocean
+    deepocd = kdeepsinking * interocean - kdeeptoint * deepocean - \
+        kburial * deepocean
     ddepo =  - deposition + katmland * atmosphere + katmocean * atmosphere
     
-    return [atmd, orgsoild, minsoild, surfocd,interocd,deepocd,ddepo]
+    return [atmd, fastsoild, slowsoild, armsoild, surfocd,interocd,deepocd,ddepo]
 
 #Pull out a yearly timestep beginning in 2000 BC and ending in 2008 (can be changed to enable longer scenarios)
-t=np.arange(-4000,2009,1)
+t=np.arange(-8000,2009,1)
 #initial conditions (state0) are based on the pre-anthropogenic in the Amos box model
-state0=[225,1127,80000,161,9979,34783,357]
+state0=[225,1127,7697,72636,161,9979,34783,357]
 
 #use ode solver to integrate the six box model
 constant=integrate.odeint(sixboxmercury, state0,t)
 
 # Make plot of atmospheric burden
-plt.plot(t, constant[:,0])
+plt.plot(t, constant[:,3])
 print(constant[-1,:])
 #%% Make plot of reservoir burdens
 f,  axes = plt.subplots(1,2, figsize=[16,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
@@ -105,18 +129,19 @@ axes = axes.flatten()
 
 axes[0].plot(t, constant[:,0], color='k', linewidth=2)
 axes[0].plot(t, constant[:,1], color=(0.6,0.6,0.6), linewidth=2, linestyle='dashdot')
-axes[0].plot(t, constant[:,3], color=(0.4,0.4,0.4), linewidth=2, linestyle='dashed')
+axes[0].plot(t, constant[:,4], color=(0.4,0.4,0.4), linewidth=2, linestyle='dashed')
 axes[0].set_xlim([1450, 2008])
 axes[0].set_title('Surface Hg Reservoirs',fontsize = 14, fontweight='bold')
 axes[0].set_xlabel('Year', fontsize = 12)
 axes[0].set_ylabel('Mg of Hg', fontsize = 12)
-axes[0].legend(['atmosphere','organic terrestrial', 'surface ocean'], fontsize = 12)
+axes[0].legend(['atmosphere','fast terrestrial', 'surface ocean'], fontsize = 12)
 
 axes[1].plot(t, constant[:,2], color='k', linewidth=2)
-axes[1].plot(t, constant[:,4], color='k', linewidth=2, linestyle='dotted')
-axes[1].plot(t, constant[:,5], color=(0.3,0.3,0.3), linewidth=2, linestyle='dashdot')
+axes[1].plot(t, constant[:,5], color='k', linewidth=2, linestyle='dotted')
+axes[1].plot(t, constant[:,3], color=(0.5,0.5,0.5), linewidth=2, linestyle='dashed')
+axes[1].plot(t, constant[:,6], color=(0.3,0.3,0.3), linewidth=2, linestyle='dashdot')
 axes[1].set_xlim([1450, 2008])
 axes[1].set_title('Intermediate Hg Reservoirs',fontsize = 14, fontweight='bold')
 axes[1].set_xlabel('Year', fontsize = 12)
 axes[1].set_ylabel('Mg of Hg', fontsize = 12)
-axes[1].legend(['mineral terrestrial','intermediate ocean', 'deep ocean'], fontsize = 12)
+axes[1].legend(['slow terrestrial','intermediate ocean','armoured terrestrial', 'deep ocean'], fontsize = 12)
