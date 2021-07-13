@@ -66,7 +66,7 @@ def sixboxmercury(state,t):
     deposition = state[7]
     geogenic = 90
     katmland = 0.5
-    f_dep_f = 0.67 # fraction of atmospheric deposition to fast
+    f_dep_f = 0.68 # fraction of atmospheric deposition to fast
     f_dep_s = 0.3 # fraction of atmospheric deposition to slow
     f_dep_a = 1 - f_dep_f - f_dep_s  # fraction of atmospheric deposition to armoured
     
@@ -81,9 +81,9 @@ def sixboxmercury(state,t):
     ksoilsf = 0.0059 # slow to fast exchange   
     ksoilsa = 1.4e-5 # slow to armoured exchange   
     ksoilaf = 7.7e-5 # armoured to fast exchange
-    kriverf = 0.074  
-    krivers = 5.3e-4
-    krivera = 5.3e-5 
+    kriverf = 0.051 
+    krivers = 3.6e-4
+    krivera = 3.6e-5 
     ksinking = 3.5
     kupwelling = 0.053
     kdeepsinking = 0.0061
