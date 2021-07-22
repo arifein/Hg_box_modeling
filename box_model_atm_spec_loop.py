@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tues Jul 13  2021
+Created on Wed Jul 21  2021
+Allow box model to be run as a loop with different dry deposition & reduction lifetime inputs
 Global mercury box model, including stratospheric box and speciation between Hg0 and Hg2+ in atmosphere
 
 Adapted from box model originally from N. Selin (2018) - https://github.com/noelleselin/sixboxmercury.git
@@ -51,12 +52,12 @@ def getbb(time):
                 x = 0.03
         return x
 
-#This creates a ten box model with similar timescales as GEOS-Chem and Amos et al. box model
+#This creates a six box model with the same timescales as Selin (2014).
 #Specified constant emissions at 1900 Mg
 #All units of k's are in #y-1
 #Fluxes in Mg
 #Also returns total deposition
-def tenboxmercury(state,t):
+def tenboxmercury(state,t, ktropred):
     tropHg0 = state[0]
     tropHg2 = state[1]
     stratHg0 = state[2]
@@ -77,7 +78,6 @@ def tenboxmercury(state,t):
     # Tropospheric External  
     ktropHg0oc = 0.54 # deposition of Hg0 to ocean, 1916.9/3573.95
     ktropHg2oc = 16.1 # deposition of Hg2+ to ocean, 3419.52/212.25
-    #ktropHg0land = 0.33 # deposition of Hg0 to land, 1192.44/3573.95
     ktropHg0land = 0.88 # deposition of Hg0 to land, 3150/3573.95 #f0=0.1 level of deposition flux with same burden
     ktropHg2land = 4.9 # deposition of Hg2+ to land, 1042.28/212.25
 
@@ -92,7 +92,6 @@ def tenboxmercury(state,t):
     
     # Tropospheric Internal
     ktropox =  4.7 # oxidation of Hg0 in troposphere, 16796.93/3573.95
-    ktropred = 136 # reduction of Hg2+ in troposphere, f0=0.1
     #ktropred = 57.4 # reduction of Hg2+ in troposphere, 12188.73/212.25
   
     # Stratospheric External
@@ -176,15 +175,27 @@ def tenboxmercury(state,t):
 
 #Pull out a yearly timestep beginning in 8000 BC and ending in 2008 (can be changed to enable longer scenarios)
 t=np.arange(-8000,2009,1)
-#initial conditions (state0) are based on the pre-anthropogenic in the Amos box model
+#initial conditions (state0) are based on the pre-anthropogenic in the Amos box model and GEOS-Chem
 state0=[180,11, 3.9, 30.4, 1127,7697,72636,161,9979,34783]
 
-#use ode solver to integrate the ten box model
-constant=integrate.odeint(tenboxmercury, state0,t)
-#%%
-# Make plot of atmospheric burden
-plt.plot(t, constant[:,2])
-print(constant[-1,:])
+# try different values of ktropred in the box model
+k_red=np.arange(129,140,1)
+res_Hg = np.zeros((len(k_red),10))
+# loop through options of k_red, save final balance
+for ii, ikred in enumerate(k_red):
+    temp=integrate.odeint(tenboxmercury, state0,t, args=(ikred,)) # run model
+    res_Hg[ii,:] = temp[-1,:]
+#%% Make plot of reduction rate and res_Hg
+f,  axes = plt.subplots(1,1, figsize=[12,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
+axes.plot(k_red, res_Hg[:,0], '-o')
+axes.axhline(y=2953, color='k', linestyle='--')
+#axes.axvline(x=57.4, color='k', linestyle=':')
+
+axes.legend(['box model runs','low f0 trop burden', 'low f0 reduction rate'], fontsize = 12)
+axes.set_xlabel('Tropospheric reduction rate (yr$^{-1}$)', fontsize = 12)
+axes.set_ylabel('Tropospheric Hg$^{0}$ burden (Mg)', fontsize = 12)
+f.savefig('Figures/red_rate_Hg0_burden_highres.pdf',bbox_inches = 'tight')
+
 #%% Make plot of reservoir burdens
 f,  axes = plt.subplots(1,2, figsize=[16,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
 axes = axes.flatten()
@@ -207,4 +218,4 @@ axes[1].set_title('Intermediate Hg Reservoirs',fontsize = 14, fontweight='bold')
 axes[1].set_xlabel('Year', fontsize = 12)
 axes[1].set_ylabel('Mg of Hg', fontsize = 12)
 axes[1].legend(['slow terrestrial','intermediate ocean','armoured terrestrial', 'deep ocean'], fontsize = 12)
-f.savefig('Figures/reservoirs_10box_f0_01.pdf',bbox_inches = 'tight')
+f.savefig('Figures/reservoirs_10box_f0_1.pdf',bbox_inches = 'tight')

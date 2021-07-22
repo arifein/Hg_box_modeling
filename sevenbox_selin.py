@@ -49,12 +49,12 @@ def getbb(time):
                 x = 0.03
         return x
 
-#This creates a six box model with the same timescales as Selin (2014).
+#This creates a seven box model with the same timescales as Amos et al. box model and GEOS-Chem.
 #Specified constant emissions at 1900 Mg
 #All units of k's are in #y-1
 #Fluxes in Mg
 #Also returns total deposition
-def sixboxmercury(state,t):
+def sevenboxmercury(state,t):
     emis = getemissions_t(t)
     atmosphere = state[0]
     fastsoil = state[1]
@@ -126,8 +126,8 @@ t=np.arange(-8000,2009,1)
 #initial conditions (state0) are based on the pre-anthropogenic in the Amos box model
 state0=[225,1127,7697,72636,161,9979,34783,357]
 
-#use ode solver to integrate the six box model
-constant=integrate.odeint(sixboxmercury, state0,t)
+#use ode solver to integrate the seven box model
+constant=integrate.odeint(sevenboxmercury, state0,t)
 
 # Make plot of atmospheric burden
 plt.plot(t, constant[:,3])
