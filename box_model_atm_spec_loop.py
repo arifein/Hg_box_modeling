@@ -179,7 +179,7 @@ t=np.arange(-8000,2009,1)
 state0=[180,11, 3.9, 30.4, 1127,7697,72636,161,9979,34783]
 
 # try different values of ktropred in the box model
-k_red=np.arange(129,140,1)
+k_red=np.arange(40,195,10)
 res_Hg = np.zeros((len(k_red),10))
 # loop through options of k_red, save final balance
 for ii, ikred in enumerate(k_red):
@@ -189,12 +189,19 @@ for ii, ikred in enumerate(k_red):
 f,  axes = plt.subplots(1,1, figsize=[12,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
 axes.plot(k_red, res_Hg[:,0], '-o')
 axes.axhline(y=2953, color='k', linestyle='--')
-#axes.axvline(x=57.4, color='k', linestyle=':')
+axes.axvline(x=57.4, color='k', linestyle=':')
+GC_f0_01_burden = [2578.377205, 2917.844585, 3348.970402] # trop Hg0 burden full GC simulation
+GC_f0_01_red = [56.41583137, 79.70007771, 111.0631257] # trop reduction rate full GC simulation
+GC_f0_low_burden = [3652.1650439141104] # trop Hg0 burden full GC simulation
+GC_f0_low_red = [57.42495928] # trop reduction rate full GC simulation
+axes.plot(GC_f0_01_red, GC_f0_01_burden, 's')
+axes.plot(GC_f0_low_red, GC_f0_low_burden, 'ks')
 
-axes.legend(['box model runs','low f0 trop burden', 'low f0 reduction rate'], fontsize = 12)
+axes.legend(['box model runs','low dry deposition trop burden (box model)', 'standard reduction rate',
+             'GEOS-Chem f0 = 0.1 runs', 'GEOS-Chem f0 = 1e-5 run'], fontsize = 12)
 axes.set_xlabel('Tropospheric reduction rate (yr$^{-1}$)', fontsize = 12)
 axes.set_ylabel('Tropospheric Hg$^{0}$ burden (Mg)', fontsize = 12)
-f.savefig('Figures/red_rate_Hg0_burden_highres.pdf',bbox_inches = 'tight')
+f.savefig('Figures/red_rate_Hg0_burden_GC.pdf',bbox_inches = 'tight')
 
 #%% Make plot of reservoir burdens
 f,  axes = plt.subplots(1,2, figsize=[16,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
