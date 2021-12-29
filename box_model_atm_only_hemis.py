@@ -36,9 +36,9 @@ def atmboxmercury(state,t, ktropred_N, ktropred_S):
     # Fluxes
     # Emissions
     emis_ant_Hg0_N = 1325.506351 # anthropogenic emissions of Hg0 NH
-    emis_ant_Hg2_N = 348.4979112 # anthropogenic emissions of Hg2 NH    
+    emis_ant_Hg2_N = 470.7322672 # anthropogenic emissions of Hg2 NH    
     emis_ant_Hg0_S = 502.9320947 # anthropogenic emissions of Hg0 SH
-    emis_ant_Hg2_S = 51.01828501 # anthropogenic emissions of Hg2 SH
+    emis_ant_Hg2_S = 68.91275967 # anthropogenic emissions of Hg2 SH
     
     emis_bb_N = 167.0632435 # biomass burning emissions NH
     emis_bb_S = 193.448934 # biomass burning emissions SH
@@ -46,27 +46,31 @@ def atmboxmercury(state,t, ktropred_N, ktropred_S):
     emiss_oc_N = 1959.469883 # ocean emissions NH
     emiss_oc_S = 3205.446392 # ocean emissions sH
     
-    emiss_land_N = 887.4757534 # land emissions NH (include soil, snow, land, geogenic)
-    emiss_land_S = 447.0003572 # land emissions SH (include soil, snow, land, geogenic)
+    emiss_land_N = 935.5902901 # land emissions NH (include soil, snow, land, geogenic)
+    emiss_land_S = 423.9375641 # land emissions SH (include soil, snow, land, geogenic)
         
-    ktropHg0oc_N = 0.41 # deposition of Hg0 to ocean in NH, 
-    ktropHg2oc_N = 20.5 # deposition of Hg2+ to ocean in NH
-    ktropHg0oc_S = 0.70 # deposition of Hg0 to ocean in SH
-    ktropHg2oc_S = 24.4 # deposition of Hg2+ to ocean in SH
+    ktropHg0oc_N = 0.38 # deposition of Hg0 to ocean in NH, 
+    #ktropHg2oc_N = 39.41 # deposition of Hg2+ to ocean in NH # f0=1e-5
+    ktropHg2oc_N = 43.28 # deposition of Hg2+ to ocean in NH # f0=3e-5
+
+    ktropHg0oc_S = 0.68 # deposition of Hg0 to ocean in SH
+    #ktropHg2oc_S = 38.90 # deposition of Hg2+ to ocean in SH # f0=1e-5
+    ktropHg2oc_S = 41.42 # deposition of Hg2+ to ocean in SH # f0=3e-5
     
-    # ktropHg0land_N = 0.40 # deposition of Hg0 to land in NH # f0=1e-5
-    ktropHg0land_N = 0.64 # deposition of Hg0 to land in NH # f0=3e-5
+    #ktropHg0land_N = 0.37 # deposition of Hg0 to land in NH # f0=1e-5
+    ktropHg0land_N = 0.61 # deposition of Hg0 to land in NH # f0=3e-5
 
-    ktropHg2land_N = 6.6 # deposition of Hg2+ to land in NH
-    # ktropHg0land_S = 0.22 # deposition of Hg0 to land in SH # f0=1e-5
-    ktropHg0land_S = 0.37 # deposition of Hg0 to land in SH # f0=3e-5
+    ktropHg2land_N = 16.37 # deposition of Hg2+ to land in NH
+    #ktropHg0land_S = 0.20 # deposition of Hg0 to land in SH # f0=1e-5
+    ktropHg0land_S = 0.38 # deposition of Hg0 to land in SH # f0=3e-5
     
-    ktropHg2land_S = 3.6 # deposition of Hg2+ to land in SH
+    ktropHg2land_S = 5.77 # deposition of Hg2+ to land in SH
 
-    ktropox_N =  4.5 # oxidation of Hg0 in troposphere NH
-    ktropox_S =  4.7 # oxidation of Hg0 in troposphere SH
+    ktropox_N =  4.32 # oxidation of Hg0 in troposphere NH
+    ktropox_S =  4.04 # oxidation of Hg0 in troposphere SH
 
-    kstratox = 11.8 # oxidation of Hg0 in stratosphere
+    kstratox = 1.65 # oxidation of Hg0 in stratosphere
+    kstratred = 1.68 # reduction of Hg2+ in stratosphere
     
     ktropstrat = 0.14 # troposphere to stratosphere transport, tuned
     # refs for strat/trop exchange: 7.4 yr
@@ -109,33 +113,36 @@ def atmboxmercury(state,t, ktropred_N, ktropred_S):
         
     stratHg0d = ktropstrat * tropHg0_N + ktropstrat * tropHg0_S \
         - kstrattrop * stratHg0 \
-        - kstratox * stratHg0
+        - kstratox * stratHg0 \
+        + kstratred * stratHg2
         
     stratHg2d = ktropstrat * tropHg2_N + ktropstrat * tropHg2_S \
         - kstrattrop * stratHg2 \
-        + kstratox * stratHg0        
+        + kstratox * stratHg0 \
+        - kstratred * stratHg2       
         
     return [tropHg0_N_d, tropHg2_N_d, tropHg0_S_d, tropHg2_S_d, stratHg0d, stratHg2d]
 
 #Pull out a yearly timestep, run until equilibration
 t=np.arange(0,500,1)
 #initial conditions (state0) are based on the pre-anthropogenic in the Amos box model and GEOS-Chem
-state0=[1960,90.4, 1610, 123, 82.2, 603]
+state0=[2200,51, 2095, 62, 474, 278]
 
 # try different values of ktropred in the box model
-k_red=np.arange(40,150,6)
-#k_red=np.arange(78.72,79,6)
+k_red=np.arange(110,240,10)
+#k_red=np.arange(140.74,141,4)
+ratio_red_N_S = 1.5 # ratio between NH and SH reduction rate
 
 res_Hg = np.zeros((len(k_red),6))
 # loop through options of k_red, save final balance
 for ii, ikred in enumerate(k_red):
-    temp=integrate.odeint(atmboxmercury, state0,t, args=(ikred,ikred/1.9,)) # run model
+    temp=integrate.odeint(atmboxmercury, state0,t, args=(ikred,ikred/ratio_red_N_S,)) # run model
     res_Hg[ii,:] = temp[-1,:]
 #%% Make plot of reduction rate and res_Hg
 f,  axes = plt.subplots(1,1, figsize=[12,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
 axes.plot(k_red, res_Hg[:,0], '-o')
-axes.axhline(y=2128.26928455, color='k', linestyle='--')
-axes.axvline(x=78.72, color='k', linestyle=':')
+axes.axhline(y=2288.18313129, color='k', linestyle='--')
+axes.axvline(x=140.74, color='k', linestyle=':')
 # GC_f0_01_burden = [2578.377205, 2917.844585, 3348.970402] # trop Hg0 burden full GC simulation
 # GC_f0_01_red = [56.41583137, 79.70007771, 111.0631257] # trop reduction rate full GC simulation
 # GC_f0_low_burden = [3652.1650439141104] # trop Hg0 burden full GC simulation
@@ -148,10 +155,10 @@ axes.legend(['box model runs','low dry deposition trop Hg0 NH burden (box model)
 axes.set_xlabel('Tropospheric reduction rate, NH (yr$^{-1}$)', fontsize = 12)
 axes.set_ylabel('Tropospheric Hg$^{0}$ burden, NH (Mg)', fontsize = 12)
 axes.grid(which='major')
-f.savefig('Figures/red_rate_Hg0_burden_NH.pdf',bbox_inches = 'tight')
+f.savefig('Figures/red_rate_Hg0_burden_NH_viral.pdf',bbox_inches = 'tight')
 #%% For SH
 f,  axes = plt.subplots(1,1, figsize=[12,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
-axes.plot(k_red/1.9, res_Hg[:,2], '-o')
+axes.plot(k_red/ratio_red_N_S, res_Hg[:,2], '-o')
 axes.axhline(y=1648.09455896, color='k', linestyle='--')
 axes.axvline(x=41.09, color='k', linestyle=':')
 # GC_f0_01_burden = [2578.377205, 2917.844585, 3348.970402] # trop Hg0 burden full GC simulation
@@ -166,4 +173,4 @@ axes.legend(['box model runs','low dry deposition trop Hg0 SH burden (box model)
 axes.set_xlabel('Tropospheric reduction rate, SH (yr$^{-1}$)', fontsize = 12)
 axes.set_ylabel('Tropospheric Hg$^{0}$ burden, SH (Mg)', fontsize = 12)
 axes.grid(which='major')
-f.savefig('Figures/red_rate_Hg0_burden_SH.pdf',bbox_inches = 'tight')
+f.savefig('Figures/red_rate_Hg0_burden_SH_viral.pdf',bbox_inches = 'tight')
