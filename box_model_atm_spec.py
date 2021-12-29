@@ -12,7 +12,6 @@ for Implementing a Global Mercury Treaty. Environmental Toxicology and Chemistry
 """
 
 import numpy as np
-import matplotlib.pyplot as p
 from scipy import integrate
 import os
 os.chdir('/Users/arifeinberg/target2/fs03/d0/arifein/python/box_modeling')
