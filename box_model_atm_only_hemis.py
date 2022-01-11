@@ -159,8 +159,8 @@ f.savefig('Figures/red_rate_Hg0_burden_NH_viral.pdf',bbox_inches = 'tight')
 #%% For SH
 f,  axes = plt.subplots(1,1, figsize=[12,6], gridspec_kw=dict(hspace=0.3, wspace=0.2))
 axes.plot(k_red/ratio_red_N_S, res_Hg[:,2], '-o')
-axes.axhline(y=1648.09455896, color='k', linestyle='--')
-axes.axvline(x=41.09, color='k', linestyle=':')
+#axes.axhline(y=1648.09455896, color='k', linestyle='--')
+#axes.axvline(x=41.09, color='k', linestyle=':')
 # GC_f0_01_burden = [2578.377205, 2917.844585, 3348.970402] # trop Hg0 burden full GC simulation
 # GC_f0_01_red = [56.41583137, 79.70007771, 111.0631257] # trop reduction rate full GC simulation
 # GC_f0_low_burden = [3652.1650439141104] # trop Hg0 burden full GC simulation
